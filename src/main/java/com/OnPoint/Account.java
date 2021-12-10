@@ -4,7 +4,6 @@ package com.OnPoint;
 
 import com.OnPoint.DatabaseRelation.Activity;
 import com.OnPoint.DatabaseRelation.Profile;
-import com.google.gson.Gson;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -115,7 +114,6 @@ public class Account {
         }
 
     }
-
     public Activity getActivity(int index) {
         return activityList.get(index);
     }
@@ -189,7 +187,6 @@ public class Account {
 //        }
         return nameF;
     }
-
     public void addFriend(Connection connect){
 
         try {
@@ -214,12 +211,10 @@ public class Account {
             throwables.printStackTrace();
         }
     }
-
     public void deleteFriend(int friendIndex){
         System.out.println("you just blocked "+ friends.get(friendIndex).getUsername());
         friends.remove(friendIndex);
     }
-
     public void inviteFriends(Connection connect, int indexAct, int nameFriend) throws SQLException {
         String friend = friends.get(nameFriend).getUsername();
 
@@ -235,7 +230,6 @@ public class Account {
         }
 
     }
-
     public void uploadFriend(Connection connect, String issuer){
         try {
             String sqlDelU = "DELETE FROM friends WHERE username = ?";
@@ -260,8 +254,6 @@ public class Account {
         }
 
     }
-
-
     public void confFriends(Connection connect, String addornot) {
         switch (addornot){
             case "y":
@@ -274,56 +266,4 @@ public class Account {
                 break;
         }
     }
-
-
-    //pengecekan konfirmasi dari friend
-    // public boolean approvalFriend(){
-    //     String cancel = scan.nextLine();
-
-    //     int confirm = 0;         //jumlah konfirmasi
-    //     int i = 0;               //indeks
-    //     boolean check = false;    //hasil boolean
-    //     ArrayList<Boolean> friends = new ArrayList<Boolean>(profile.getConfirm());//membuat arraylist untuk boolean confirm dari database
-    //     // looping sampai kondisi yang ditentukan
-    //     while(i >= 0){
-    //         if(i >= friends.size()){    //apabila sama sizenya dibikin jadi 0 lagi
-    //             i = 0;
-    //         }if (friends.get(i)) {      //apabila true pada arraylist boolean
-    //             confirm += 1;
-    //         }if (confirm >= (friends.size() * 0.7)){    //minimal jumlah confirm adalah anggota * 70%
-    //             System.out.println("you can change activity now");
-    //         }if(confirm == friends.size()){             //apabila semua anggota sudah konfirmasi maka keluar
-    //             friends = null;
-    //             confirm = 0;
-    //             check = true;
-    //             break;
-    //         }if(cancel == "c" || cancel == "C"){        //tidak jadi merubah
-    //             friends = null;
-    //             confirm = 0;
-    //             break;
-    //         }
-
-    //         i++;
-    //     }
-    //     return true;
-    // }
-
-//     public String getCurrentTime(){
-//         LocalDateTime in = LocalDateTime.now();
-//         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-//         System.out.println(in.format(formatter));
-
-// //         LocalTime obj = LocalTime.now();
-// //         DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm");
-// //         String result = obj.format(format);
-// //         System.out.println(result);
-
-// //         LocalDate date = LocalDate.now();
-// //         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MM yyyy");
-// //         String text = date.format(formatter);
-// //         LocalDate parsedDate = LocalDate.parse(text, formatter);
-// //         System.out.println(parsedDate);
-
-//         return result;
-//     }
 }
