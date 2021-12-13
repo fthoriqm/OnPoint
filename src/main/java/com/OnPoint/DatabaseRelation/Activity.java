@@ -18,7 +18,4 @@ public class Activity {
     public Timestamp getTime() {
         return this.time;
     }
-
-    //database
-    //.........
 }

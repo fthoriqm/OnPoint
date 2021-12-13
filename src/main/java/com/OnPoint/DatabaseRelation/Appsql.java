@@ -3,7 +3,7 @@ import java.sql.*;
 
 public class Appsql {
 
-    private final String url = "jdbc:postgresql://localhost:5432/onpoint";
+    private final String url = "jdbc:postgresql://localhost:5432/OnPoint";
     private final String user = "postgres";
     private final String password = "";
 

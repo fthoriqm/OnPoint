@@ -4,18 +4,22 @@ package com.OnPoint;
 
 import com.OnPoint.DatabaseRelation.Activity;
 import com.OnPoint.DatabaseRelation.Profile;
+import com.google.gson.Gson;
 
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Scanner;
 
 public class Account {
     private final Profile profile = new Profile();
     public ArrayList<Activity> activityList = new ArrayList<>();
     public ArrayList<People> friends = new ArrayList<>();
 
-    //    Profile Management
+//    Profile Management
     public Profile getProfile(){
         return this.profile;
     }
@@ -49,7 +53,7 @@ public class Account {
     public void showActivity(){
         if(activityList.size() <= 0) {
             System.out.println("You are free from any schedule :)");
-        }else{
+        } else{
             System.out.println("--Appointment--");
             for(int i = 0; i < activityList.size(); i++) {
                 System.out.println(activityList.get(i).getName() + " " + activityList.get(i).getTime());
@@ -82,7 +86,6 @@ public class Account {
 
         }
         return activityList;
-
     }
     public void uploadActivity(Connection connect, String issuer){
         try {
@@ -114,11 +117,21 @@ public class Account {
         }
 
     }
+    public Activity getActivity(int index) {
+        return activityList.get(index);
+    }
+
+    //Friends CRUD
+//    public boolean approvalFriend(){
+//        profile.Friends();
+//        return true;
+//    }
     public void reloadFriends(Connection connect) {
+        System.out.println(getProfile().getUsername());
         try {
             String sql = "SELECT profile.username, profile.email, profile.password, profile.rating FROM friends INNER JOIN profile ON friends.username = ? AND friends.friend = profile.username";
             PreparedStatement st = connect.prepareStatement(sql);
-            st.setString(1, profile.getUsername());
+            st.setString(1, getProfile().getUsername());
             ResultSet rs = st.executeQuery();
             while (rs.next()) {
                 String nameF = rs.getString("username");
@@ -133,13 +146,14 @@ public class Account {
             except.printStackTrace();
         }
     }
+
     public void showFriends(){
         for(People friend : friends){
             System.out.println(friend.getUsername());
         }
     }
 
-    public String findFriends(Connection connect, String fr) {
+    public People findFriends(Connection connect, String fr) {
         String nameF = null;
         String emailF= null;
         String passF= null;
@@ -154,71 +168,94 @@ public class Account {
                 emailF = rs.getString("email");
                 passF = rs.getString("password");
                 rateF = rs.getDouble("rating");
-                friends.add(new People(nameF, emailF, passF, rateF));
             }
         } catch (SQLException except) {
             System.out.println("Connection Failed");
             except.printStackTrace();
         }
-        return friends.get(friends.size()-1).getUsername();
+        System.out.println("name "+ nameF);
+        if (nameF != null) {
+            return new People(nameF, emailF, passF, rateF);
+        }
+        return null;
     }
-    public void addFriend(Connection connect){
 
+    public People addFriend(People friend){
+        boolean booldup = false;
+        if (friend != null) {
+            for (People fr : friends) {
+                if (fr.getUsername().equals(friend.getUsername())) {
+                        booldup = true;
+                        System.out.println("you already add this friend");
+                        break;
+                }
+            }
+            if (booldup) {
+                return null;
+            } else {
+                friends.add(friend);
+                System.out.println(friends.size());
+                return friend;
+            }
+        }
+        return null;
+    }
+
+    public void deleteFriend(int friendIndex){
+        if (friends.size() > 0) {
+            System.out.println("you just blocked "+ friends.get(friendIndex).getUsername());
+            friends.remove(friendIndex);
+        }
+    }
+
+    public void inviteFriends(Connection connect, int indexAct, int nameFriend) {
+        String friend = friends.get(nameFriend).getUsername();
         try {
-            String sql = "INSERT INTO friends VALUES(?, ?)";
+            String sql = "INSERT INTO activities VALUES(?, ?, ?)";
             PreparedStatement st = connect.prepareStatement(sql);
-            st.setString(1, profile.getUsername());
-            st.setString(2, friends.get((friends.size()-1)).getUsername());
-
-            String sql2 = "INSERT INTO friends VALUES(?, ?)";
-            PreparedStatement st2 = connect.prepareStatement(sql2);
-            st2.setString(1, friends.get((friends.size()-1)).getUsername());
-            st2.setString(2, profile.getUsername());
+            st.setString(1, activityList.get(indexAct).getName());
+            st.setTimestamp(2, activityList.get(indexAct).getTime());
+            st.setString(3, friend);
 
             int rows = st.executeUpdate();
-            int rows2 = st2.executeUpdate();
-
-            if (rows > 0 && rows2 > 0) {
-                System.out.println("you add "+ friends.get((friends.size()-1)).getUsername() + " as friend");
-
+            if (rows > 0) {
+                System.out.println("Invite Successfully");
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
     }
-    public void deleteFriend(int friendIndex){
-        System.out.println("you just blocked "+ friends.get(friendIndex).getUsername());
-        friends.remove(friendIndex);
-    }
-    public void inviteFriends(Connection connect, int indexAct, int nameFriend) throws SQLException {
-        String friend = friends.get(nameFriend).getUsername();
 
-        String sql = "INSERT INTO activities VALUES(?, ?, ?)";
-        PreparedStatement st = connect.prepareStatement(sql);
-        st.setString(1, activityList.get(indexAct).getName());
-        st.setTimestamp(2, activityList.get(indexAct).getTime());
-        st.setString(3, friend);
-
-        int rows = st.executeUpdate();
-        if (rows > 0){
-            System.out.println("Invite Successfully");
-        }
-
-    }
-    public void uploadFriend(Connection connect, String issuer){
+    public void uploadFriend(Connection connect){
         try {
             String sqlDelU = "DELETE FROM friends WHERE username = ?";
             PreparedStatement stDelU = connect.prepareStatement(sqlDelU);
-            stDelU.setString(1, issuer);
+            stDelU.setString(1, getProfile().getUsername());
             int rowDelU = stDelU.executeUpdate();
 
             String sqlDelF = "DELETE FROM friends WHERE friend = ?";
             PreparedStatement stDelF = connect.prepareStatement(sqlDelF);
-            stDelF.setString(1, issuer);
+            stDelF.setString(1, getProfile().getUsername());
             int rowDelF = stDelF.executeUpdate();
 
             for (int i = 0 ; i < friends.size() ; i++) {
-                addFriend(connect);
+                try {
+                    String sql = "INSERT INTO friends VALUES(?, ?)";
+                    PreparedStatement st = connect.prepareStatement(sql);
+                    st.setString(1, getProfile().getUsername());
+                    st.setString(2, friends.get(i).getUsername());
+
+                    String sql2 = "INSERT INTO friends VALUES(?, ?)";
+                    PreparedStatement st2 = connect.prepareStatement(sql2);
+                    st2.setString(1, friends.get(i).getUsername());
+                    st2.setString(2, getProfile().getUsername());
+
+                    int rows = st.executeUpdate();
+                    int rows2 = st2.executeUpdate();
+
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
             }
             if (rowDelU > 0 && rowDelF > 0) {
                 System.out.println("Database Successfully Uploaded");
@@ -229,16 +266,56 @@ public class Account {
         }
 
     }
-    public void confFriends(Connection connect, String addornot) {
-        switch (addornot){
-            case "y":
-                System.out.println("add friend");
-                addFriend(connect);
-                break;
-            case "n":
-                System.out.println("erased friend");
-                friends.remove((friends.size()-1));
-                break;
-        }
-    }
+
+
+    //pengecekan konfirmasi dari friend
+    // public boolean approvalFriend(){
+    //     String cancel = scan.nextLine();
+
+    //     int confirm = 0;         //jumlah konfirmasi
+    //     int i = 0;               //indeks
+    //     boolean check = false;    //hasil boolean
+    //     ArrayList<Boolean> friends = new ArrayList<Boolean>(profile.getConfirm());//membuat arraylist untuk boolean confirm dari database
+    //     // looping sampai kondisi yang ditentukan
+    //     while(i >= 0){
+    //         if(i >= friends.size()){    //apabila sama sizenya dibikin jadi 0 lagi
+    //             i = 0;
+    //         }if (friends.get(i)) {      //apabila true pada arraylist boolean
+    //             confirm += 1;
+    //         }if (confirm >= (friends.size() * 0.7)){    //minimal jumlah confirm adalah anggota * 70%
+    //             System.out.println("you can change activity now");
+    //         }if(confirm == friends.size()){             //apabila semua anggota sudah konfirmasi maka keluar
+    //             friends = null;
+    //             confirm = 0;
+    //             check = true;
+    //             break;
+    //         }if(cancel == "c" || cancel == "C"){        //tidak jadi merubah
+    //             friends = null;
+    //             confirm = 0;
+    //             break;
+    //         }
+
+    //         i++;
+    //     }
+    //     return true;
+    // }
+
+//     public String getCurrentTime(){
+//         LocalDateTime in = LocalDateTime.now();
+//         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+//         System.out.println(in.format(formatter));
+
+// //         LocalTime obj = LocalTime.now();
+// //         DateTimeFormatter format = DateTimeFormatter.ofPattern("HH:mm");
+// //         String result = obj.format(format);
+// //         System.out.println(result);
+
+// //         LocalDate date = LocalDate.now();
+// //         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MM yyyy");
+// //         String text = date.format(formatter);
+// //         LocalDate parsedDate = LocalDate.parse(text, formatter);
+// //         System.out.println(parsedDate);
+
+//         return result;
+//     }
 }

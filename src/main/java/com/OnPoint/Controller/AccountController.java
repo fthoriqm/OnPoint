@@ -5,6 +5,7 @@ import com.OnPoint.DatabaseRelation.Appsql;
 import com.OnPoint.DatabaseRelation.Profile;
 import com.OnPoint.People;
 import org.springframework.web.bind.annotation.*;
+
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
@@ -19,44 +20,109 @@ public class AccountController {
     Connection conndb = appsql.connect();
 
     @PostMapping("/login")
-    Profile login (@RequestParam String emailoruser, @RequestParam String password) {
+    Profile login
+            (
+            @RequestParam String emailoruser,
+            @RequestParam String password
+            )
+    {
         if (authPass(password, false) && (authUsername(emailoruser, false) || authEmail(emailoruser, false))) {
             account.getProfile().setLogin(emailoruser);
-            account.reloadFriends(conndb);
-            return this.account.getProfile();
+            return account.getProfile();
         }
         return null;
     }
+
     @PostMapping("/register")
-    boolean register(@RequestParam String name, @RequestParam String email, @RequestParam String password) {
+    boolean register
+            (
+                    @RequestParam String name,
+                    @RequestParam String email,
+                    @RequestParam String password
+            )
+    {
         if (authPass(password, true) && (authUsername(name, true) && authEmail(email, true))) {
             account.getProfile().setRegister(name, email, password);
             return true;
         }
         return false;
     }
-    @GetMapping("/findFriends")
-    String findFriend(@RequestParam String friendName) {
-        String friend = account.findFriends(conndb, friendName);
-        System.out.println("yessss"+friend);
-        if (friend.equals(friendName)){
-            return friend;
-        }
-        return "not found";
+
+    @GetMapping("/reloadFriends")
+    void reloadFriends(){
+        account.reloadFriends(conndb);
     }
-    @PostMapping("/addFriends")
-    ArrayList<People> addFriends(@RequestParam boolean confirmation) {
-        if(confirmation){
-            account.addFriend(conndb);
-        }else{
-            account.friends.remove(account.friends.size()-1);
+
+    @PostMapping("/findFriends")
+    String findFriend
+            (
+                    @RequestParam String friendName
+            )
+    {
+        People friend = account.findFriends(conndb, friendName);
+        System.out.println(friend);
+        if (friend != null){
+            account.uploadFriend(conndb);
+            return friend.getUsername();
         }
+        return "null";
+    }
+
+    @PostMapping("/addFriends")
+    People addFriends
+            (
+                    @RequestParam String friend,
+                    @RequestParam boolean confirmation
+            )
+    {
+        if(confirmation) {
+            People add = account.addFriend(account.findFriends(conndb, friend));
+            if (add != null) {
+                account.uploadFriend(conndb);
+                return add;
+            }
+        }
+        return null;
+    }
+
+    @PostMapping("/showFriends")
+    ArrayList<People> showFriends(){
         return account.friends;
     }
-    @GetMapping("/Profile")
+
+    @PostMapping("/deleteFriends")
+    void deleteFriend
+            (
+                    @RequestParam int index
+            )
+    {
+        account.deleteFriend(index);
+        account.uploadFriend(conndb);
+    }
+
+    @PostMapping("/inviteMeet")
+    void inviteMeet
+            (
+                    @RequestParam int indexAct,
+                    @RequestParam int nameFriend
+            )
+    {
+        account.inviteFriends(conndb, indexAct, nameFriend);
+        account.uploadFriend(conndb);
+    }
+
+    @PostMapping("/reloadFriends")
+    void uploadFriends(){
+        account.uploadFriend(conndb);
+    }
+
+    @PostMapping("/Profile")
     public Profile showProfile() {
+        account.showProfile();
         return account.getProfile();
     }
+
+    //Account Creation and Authentication
 
     //login & register verification
     public boolean authEmail(String email, boolean registerMode){
@@ -103,16 +169,4 @@ public class AccountController {
             return false;
         }
     }
-
-//    GsonBuilder gsonBuilder = new GsonBuilder();
-//
-//    // This is the main class for using Gson. Gson is typically used by first constructing a Gson instance and then invoking toJson(Object) or fromJson(String, Class) methods on it.
-//    // Gson instances are Thread-safe so you can reuse them freely across multiple threads.
-//    Gson gson = gsonBuilder.create();
-//
-//    String JSONObject = gson.toJson(crunchify);
-//    log("\nConverted JSONObject ==> " + JSONObject);
-//
-//    Gson prettyGson = new GsonBuilder().setPrettyPrinting().create();
-//    String prettyJson = prettyGson.toJson(crunchify);
 }

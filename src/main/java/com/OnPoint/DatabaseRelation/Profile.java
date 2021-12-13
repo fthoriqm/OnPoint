@@ -78,12 +78,11 @@ public class Profile{
         return password_exist;
     }
 
-    public void setLogin(String emailoruser){
+    public void setLogin(String username){
         try {
-            String sql = "SELECT * from Profile WHERE username = ? OR email = ?";
+            String sql = "SELECT * from Profile WHERE username = ?";
             PreparedStatement statement = conndb.prepareStatement(sql);
-            statement.setString(1, emailoruser);
-            statement.setString(2, emailoruser);
+            statement.setString(1, username);
             ResultSet rs = statement.executeQuery();
             if (rs.next()) {
                 setEmail((rs.getString("email")));
@@ -110,10 +109,6 @@ public class Profile{
             if (rows > 0) {
                 System.out.println("Profile Added");
             }
-            setEmail(email);
-            setUsername(username);
-            setPassword(password);
-            setRating(5.0);
         } catch (SQLException except) {
             System.out.println("Connection Failed");
             except.printStackTrace();
@@ -121,8 +116,6 @@ public class Profile{
     }
 
     //database
-
-
     public ArrayList<Boolean> getConfirm(){
         //friends confirmation boolean from database
         //save the boolean to variable
