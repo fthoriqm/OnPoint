@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.Scanner;
 
 public class Account {
+    public static Account account = new Account();
     private final Profile profile = new Profile();
     public ArrayList<Activity> activityList = new ArrayList<>();
     public ArrayList<People> friends = new ArrayList<>();

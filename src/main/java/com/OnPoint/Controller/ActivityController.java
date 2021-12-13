@@ -1,26 +1,23 @@
 package com.OnPoint.Controller;
 
-import com.OnPoint.Account;
 import com.OnPoint.DatabaseRelation.Activity;
 import com.OnPoint.DatabaseRelation.Appsql;
 import org.springframework.web.bind.annotation.*;
-
 import java.sql.Connection;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import static com.OnPoint.Account.account;
 
 @RestController
 @RequestMapping("/activity")
 
-class ActivityController {
-    Account account = new Account();
+public class ActivityController {
     Appsql appsql = new Appsql();
     Connection conndb = appsql.connect();
 
     public ActivityController (){
-        account.getProfile().setUsername("wafi");
         account.reloadActivity(conndb);
     }
 

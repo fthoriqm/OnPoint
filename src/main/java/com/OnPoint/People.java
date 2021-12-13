@@ -17,19 +17,13 @@ public class People {
     public String getUsername() {
         return this.username;
     }
-
     public String getEmail() {
         return this.email;
     }
-
-
     public String getPassword() {
         return this.password;
     }
-
     public double getRating() {
         return this.rating;
     }
-
-
 }
