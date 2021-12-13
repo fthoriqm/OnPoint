@@ -114,15 +114,6 @@ public class Account {
         }
 
     }
-    public Activity getActivity(int index) {
-        return activityList.get(index);
-    }
-
-    //Friends CRUD
-//    public boolean approvalFriend(){
-//        profile.Friends();
-//        return true;
-//    }
     public void reloadFriends(Connection connect) {
         try {
             String sql = "SELECT profile.username, profile.email, profile.password, profile.rating FROM friends INNER JOIN profile ON friends.username = ? AND friends.friend = profile.username";
@@ -142,7 +133,6 @@ public class Account {
             except.printStackTrace();
         }
     }
-
     public void showFriends(){
         for(People friend : friends){
             System.out.println(friend.getUsername());
@@ -154,7 +144,6 @@ public class Account {
         String emailF= null;
         String passF= null;
         double rateF = 0.0;
-        boolean friend_found = false;
         try {
             String sql = "SELECT * from profile where username = ?";
             PreparedStatement st = connect.prepareStatement(sql);
@@ -165,27 +154,13 @@ public class Account {
                 emailF = rs.getString("email");
                 passF = rs.getString("password");
                 rateF = rs.getDouble("rating");
-                friend_found = true;
                 friends.add(new People(nameF, emailF, passF, rateF));
-            }
-            if(friend_found){
-                System.out.println("Your friend? " + nameF);
-            }else{
-                nameF = "Can't find your friend";
             }
         } catch (SQLException except) {
             System.out.println("Connection Failed");
             except.printStackTrace();
         }
-        System.out.println(friends);
-//        String chosenFriends = friends.get(friends.size()-1).getUsername();
-//        for(People pp: friends){
-//            if (chosenFriends.equals(pp.getUsername())){
-//                friends.remove(friends.size()-1);
-//                nameF = "you already add this friend";
-//            }
-//        }
-        return nameF;
+        return friends.get(friends.size()-1).getUsername();
     }
     public void addFriend(Connection connect){
 

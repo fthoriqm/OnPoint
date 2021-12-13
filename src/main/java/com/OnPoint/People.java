@@ -22,7 +22,6 @@ public class People {
         return this.email;
     }
 
-
     public String getPassword() {
         return this.password;
     }

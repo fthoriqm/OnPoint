@@ -22,11 +22,11 @@ public class AccountController {
     Profile login (@RequestParam String emailoruser, @RequestParam String password) {
         if (authPass(password, false) && (authUsername(emailoruser, false) || authEmail(emailoruser, false))) {
             account.getProfile().setLogin(emailoruser);
+            account.reloadFriends(conndb);
             return this.account.getProfile();
         }
         return null;
     }
-
     @PostMapping("/register")
     boolean register(@RequestParam String name, @RequestParam String email, @RequestParam String password) {
         if (authPass(password, true) && (authUsername(name, true) && authEmail(email, true))) {
@@ -35,11 +35,11 @@ public class AccountController {
         }
         return false;
     }
-    @PostMapping("/findFriends")
+    @GetMapping("/findFriends")
     String findFriend(@RequestParam String friendName) {
         String friend = account.findFriends(conndb, friendName);
         System.out.println("yessss"+friend);
-        if (friend == friendName){
+        if (friend.equals(friendName)){
             return friend;
         }
         return "not found";
@@ -53,15 +53,9 @@ public class AccountController {
         }
         return account.friends;
     }
-
     @GetMapping("/Profile")
     public Profile showProfile() {
         return account.getProfile();
-    }
-
-    //Account Creation and Authentication
-    public void setProfile (String username, String email, String password){
-        account.getProfile().setRegister(username, email, password);
     }
 
     //login & register verification
