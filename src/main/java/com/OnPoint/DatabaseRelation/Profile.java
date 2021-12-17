@@ -1,14 +1,13 @@
 package com.OnPoint.DatabaseRelation;
 
+import com.OnPoint.Account;
 import com.OnPoint.Rating;
+import com.OnPoint.dbJson.JsonAutowired;
+import com.OnPoint.dbJson.JsonTable;
+import com.google.gson.Gson;
 
-import javax.sound.midi.SysexMessage;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class Profile{
     private String username;
@@ -78,11 +77,12 @@ public class Profile{
         return password_exist;
     }
 
-    public void setLogin(String username){
+    public void setLogin(String useroremail){
         try {
-            String sql = "SELECT * from Profile WHERE username = ?";
+            String sql = "SELECT * from Profile WHERE username = ? OR email = ? ";
             PreparedStatement statement = conndb.prepareStatement(sql);
-            statement.setString(1, username);
+            statement.setString(1, useroremail);
+            statement.setString(2, useroremail);
             ResultSet rs = statement.executeQuery();
             if (rs.next()) {
                 setEmail((rs.getString("email")));

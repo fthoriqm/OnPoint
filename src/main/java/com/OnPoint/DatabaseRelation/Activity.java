@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 
 public class Activity {
     String name;
+    String desc;
     Timestamp time;
 
     //read/write database
-    public Activity (String name, Timestamp time){
+    public Activity (String name, String desc, Timestamp time){
+        this.desc = desc;
         this.name = name;
         this.time = time;
     }

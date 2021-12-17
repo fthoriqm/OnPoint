@@ -4,6 +4,8 @@ package com.OnPoint;
 
 import com.OnPoint.DatabaseRelation.Activity;
 import com.OnPoint.DatabaseRelation.Profile;
+import com.OnPoint.dbJson.JsonAutowired;
+import com.OnPoint.dbJson.JsonTable;
 import com.google.gson.Gson;
 
 import java.sql.*;
@@ -15,36 +17,41 @@ import java.util.LinkedHashSet;
 import java.util.Scanner;
 
 public class Account {
-    public static Account account = new Account();
     private final Profile profile = new Profile();
     public ArrayList<Activity> activityList = new ArrayList<>();
     public ArrayList<People> friends = new ArrayList<>();
+
+    public Account(){}
+    public Account(String username, String email, String password){
+        this.profile.setUsername(username);
+        this.profile.setEmail(email);
+        this.profile.setPassword(password);
+        this.profile.setRating(5.0);
+    }
+    public Account(String username, String email, String password, double rating){
+        this.profile.setUsername(username);
+        this.profile.setEmail(email);
+        this.profile.setPassword(password);
+        this.profile.setRating(rating);
+    }
 
 //    Profile Management
     public Profile getProfile(){
         return this.profile;
     }
 
-    public void showProfile() {
-        System.out.println(getProfile().getUsername());
-        System.out.println(getProfile().getEmail());
-        System.out.println(getProfile().getPassword());
-        System.out.println(getProfile().getRating());
-        System.out.println(getProfile().rate.getTotalMeet());
-
-    }
-
     //Activity CRUD
     public void reloadActivity(Connection connect){
         try {
-            String sql = "SELECT activity_name,start_time FROM activities WHERE isuser = ?";
+            String sql = "SELECT activity_name, description, start_time FROM activities WHERE isuser = ?";
             PreparedStatement st = connect.prepareStatement(sql);
             st.setString(1, profile.getUsername());
             ResultSet rs = st.executeQuery();
             while (rs.next()){
                 String activity = rs.getString("activity_name");
                 Timestamp time  = rs.getTimestamp("start_time");
-                activityList.add(new Activity(activity,time));
+                String desc = rs.getString("description");
+                activityList.add(new Activity(activity,desc, time));
             }
         } catch (SQLException except) {
             System.out.println("Connection Failed on reloadActivity");
@@ -61,13 +68,13 @@ public class Account {
             }
         }
     }
-    public ArrayList<Activity> addActivity(String activityName, String activityTime){
+    public ArrayList<Activity> addActivity(String activityName, String desc, String activityTime){
         String timeInput = activityTime;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime timeIn = LocalDateTime.parse(timeInput, formatter);
         Timestamp timestamp = Timestamp.valueOf(timeIn);
 
-        activityList.add(new Activity(activityName, timestamp));
+        activityList.add(new Activity(activityName,desc, timestamp));
         return activityList;
     }
     public ArrayList<Activity> removeActivity(int index){
@@ -75,48 +82,44 @@ public class Account {
         return activityList;
 
     }
-    public ArrayList<Activity> editActivity(int index, String activityName, String activityTime){
+    public ArrayList<Activity> editActivity(int index, String activityName, String desc, String activityTime){
         if (activityList.size() <= 0){
             System.out.println("You are free from any schedule :)");
         }else {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             Timestamp timeIn = Timestamp.valueOf(LocalDateTime.parse(activityTime, formatter));
-            activityList.set(index-1, new Activity(activityName, timeIn));
+            activityList.set(index-1, new Activity(activityName, desc, timeIn));
 
             return activityList;
 
         }
         return activityList;
     }
-    public void uploadActivity(Connection connect, String issuer){
+    public boolean uploadActivity(Connection connect, String issuer){
         try {
             String sqlDel = "DELETE FROM activities WHERE isuser = ?";
             PreparedStatement stDel = connect.prepareStatement(sqlDel);
             stDel.setString(1, issuer);
             int rowDel = stDel.executeUpdate();
+            if (rowDel>0){
+                for (int i = 0 ; i < activityList.size() ; i++) {
+                    String sqlIn = "INSERT INTO activities (activity_name,  start_time, isuser) VALUES (?,?,?)";
+                    PreparedStatement stIn = connect.prepareStatement(sqlIn);
+                    stIn.setString(1, activityList.get(i).getName());
+                    stIn.setTimestamp(2, activityList.get(i).getTime());
+                    stIn.setString(3, issuer);
 
-            for (int i = 0 ; i < activityList.size() ; i++) {
-                String sqlIn = "INSERT INTO activities (activity_name,  start_time, isuser) VALUES (?,?,?)";
-                PreparedStatement stIn = connect.prepareStatement(sqlIn);
-                stIn.setString(1, activityList.get(i).getName());
-                stIn.setTimestamp(2, activityList.get(i).getTime());
-                stIn.setString(3, issuer);
-
-                int rowIn = stIn.executeUpdate();
-                if (rowIn > 0) {
-                    System.out.println("Database Successfully Uploaded");
+                    int rowIn = stIn.executeUpdate();
+                    if (rowIn > 0) {
+                        return true;
+                    }
                 }
-            }
-
-            System.out.println(activityList.size());
-            if (rowDel > 0) {
-                System.out.println("Database Successfully Uploaded");
             }
         } catch (SQLException except) {
             System.out.println("Connection Failed on uploadActivity");
             except.printStackTrace();
         }
-
+        return false;
     }
     public Activity getActivity(int index) {
         return activityList.get(index);
@@ -147,13 +150,11 @@ public class Account {
             except.printStackTrace();
         }
     }
-
     public void showFriends(){
         for(People friend : friends){
             System.out.println(friend.getUsername());
         }
     }
-
     public People findFriends(Connection connect, String fr) {
         String nameF = null;
         String emailF= null;
@@ -180,7 +181,6 @@ public class Account {
         }
         return null;
     }
-
     public People addFriend(People friend){
         boolean booldup = false;
         if (friend != null) {
@@ -201,14 +201,12 @@ public class Account {
         }
         return null;
     }
-
     public void deleteFriend(int friendIndex){
         if (friends.size() > 0) {
             System.out.println("you just blocked "+ friends.get(friendIndex).getUsername());
             friends.remove(friendIndex);
         }
     }
-
     public void inviteFriends(Connection connect, int indexAct, int nameFriend) {
         String friend = friends.get(nameFriend).getUsername();
         try {
@@ -226,7 +224,6 @@ public class Account {
             throwables.printStackTrace();
         }
     }
-
     public void uploadFriend(Connection connect){
         try {
             String sqlDelU = "DELETE FROM friends WHERE username = ?";
@@ -267,7 +264,6 @@ public class Account {
         }
 
     }
-
 
     //pengecekan konfirmasi dari friend
     // public boolean approvalFriend(){

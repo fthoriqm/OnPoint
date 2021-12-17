@@ -1,6 +1,10 @@
 package com.OnPoint.Registration;
 
+import com.OnPoint.Account;
 import com.OnPoint.DatabaseRelation.Profile;
+import com.OnPoint.dbJson.JsonAutowired;
+import com.OnPoint.dbJson.JsonTable;
+import com.google.gson.Gson;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
